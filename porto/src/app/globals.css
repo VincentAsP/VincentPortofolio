@@ -19,6 +19,12 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(0%);
@@ -28,7 +34,69 @@ body {
   }
 }
 
+@keyframes enterFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-32px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-marquee {
   animation: marquee 15s linear infinite;
+}
+
+.enter-from-top {
+  animation: enterFromTop 0.8s ease-out both;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, Opera */
+}
+.glitch-letter {
+  display: inline-block;
+  position: relative;
+}
+
+.glitch-letter::before,
+.glitch-letter::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.glitch-letter:hover::before,
+.glitch-letter:hover::after {
+  opacity: 0.8;
+}
+
+.glitch-letter:hover::before {
+  color: #ff3b6b;
+  animation: glitch-before 350ms steps(2, end) infinite;
+}
+
+.glitch-letter:hover::after {
+  color: #00d9ff;
+  animation: glitch-after 300ms steps(2, end) infinite;
+}
+
+@keyframes glitch-before {
+  0%, 100% { clip-path: inset(0 0 75% 0); transform: translate(-2px, -1px); }
+  50% { clip-path: inset(45% 0 25% 0); transform: translate(2px, 1px); }
+}
+
+@keyframes glitch-after {
+  0%, 100% { clip-path: inset(70% 0 0 0); transform: translate(2px, 1px); }
+  50% { clip-path: inset(15% 0 55% 0); transform: translate(-2px, -1px); }
 }
 
