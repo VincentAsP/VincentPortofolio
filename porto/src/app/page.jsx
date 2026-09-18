@@ -166,17 +166,17 @@ export default function Home() {
             </svg>
             <LetterWithEffects
               text="P"
-              href="/projects"
+              href="/projects?type=P"
               className="text-[clamp(600px,20vw,462px)] font-normal text-[rgba(74,74,74,1)] leading-none"
             />
             <LetterWithEffects
               text="W"
-              href="/projects"
+              href="/projects?type=W"
               className="text-[clamp(600px,20vw,462px)] font-normal text-[rgba(74,74,74,1)] leading-none"
             />
             <LetterWithEffects
               text="E"
-              href="/projects"
+              href="/projects?type=E"
               className="text-[clamp(600px,20vw,462px)] font-normal text-[rgba(74,74,74,1)] leading-none"
               
             />

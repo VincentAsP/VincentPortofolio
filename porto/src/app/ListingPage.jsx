@@ -1,56 +1,147 @@
-import Header from './Component/Header';
+import { supabase } from '@/utils/supabase';
+import FilterBar from './Component/FilterBar';
+import ProjectCardList from './Component/ProjectCardList';
 
-const projects = [
-  {
-    title: 'AI Research Assistant',
-    category: 'AI',
-    year: '2025',
-    accent: 'from-[#FF7373] to-[#FFD1D1]',
-    summary: 'An intelligent workspace that summarizes insights and helps users move faster from idea to action.',
-  },
-  {
-    title: 'Smart Home Dashboard',
-    category: 'IoT',
-    year: '2024',
-    accent: 'from-[#307FC8] to-[#BFE3FF]',
-    summary: 'A connected interface for monitoring devices, automation rules, and energy usage in real time.',
-  },
-  {
-    title: 'Portfolio Experience',
-    category: 'Web',
-    year: '2025',
-    accent: 'from-[#171717] to-[#7A7A7A]',
-    summary: 'A visually rich digital portfolio built around storytelling, motion, and bold interaction design.',
-  },
-  {
-    title: 'Inventory Intelligence',
-    category: 'Productivity',
-    year: '2024',
-    accent: 'from-[#FFB347] to-[#FFE7B8]',
-    summary: 'A practical product tracking solution for managing stock, alerts, and trends without extra friction.',
-  },
-  {
-    title: 'Motion Brand Landing',
-    category: 'Design',
-    year: '2023',
-    accent: 'from-[#5F6FFF] to-[#D6D9FF]',
-    summary: 'A highly branded landing page concept focused on conversion, clarity, and visual storytelling.',
-  },
-  {
-    title: 'Campus Monitoring App',
-    category: 'System',
-    year: '2024',
-    accent: 'from-[#37B76A] to-[#C9F4D8]',
-    summary: 'A campus-related digital dashboard that combines reporting, tracking, and operational visibility.',
-  },
-];
+function truncateText(text, maxLength = 150) {
+  if (!text) return 'No description available yet.';
+  return text.length > maxLength
+    ? text.slice(0, maxLength).trimEnd() + '...'
+    : text;
+}
 
-const filters = ['All', 'AI', 'IoT', 'Web', 'Productivity', 'Design'];
+async function getTypeMaps() {
+  const { data, error } = await supabase
+    .from('Type')
+    .select('*')
+    .order('Typeid', { ascending: true });
 
-export default function ListingPage() {
+  if (error) {
+    console.error('Error fetching types:', error);
+    return { typeLabels: {}, typeMap: {}, typeList: [] };
+  }
+
+  const typeLabels = {};
+  const typeMap = {};
+
+  (data ?? []).forEach((t) => {
+    typeLabels[t.Typeid] = t.Types;
+
+    const nameKey = t.Types.trim().toUpperCase();
+    const firstLetterKey = nameKey.charAt(0);
+    const noSpaceKey = nameKey.replace(/\s+/g, '');
+
+    typeMap[nameKey] = t.Typeid;
+    typeMap[noSpaceKey] = t.Typeid;
+    typeMap[firstLetterKey] = t.Typeid;
+  });
+
+  return { typeLabels, typeMap, typeList: data ?? [] };
+}
+
+function normalizeType(typeValue, typeMap) {
+  if (!typeValue) return null;
+
+  const raw = String(typeValue).trim().toUpperCase();
+
+  if (typeMap[raw] !== undefined) {
+    return typeMap[raw];
+  }
+
+  const numericType = Number(typeValue);
+  if (Number.isInteger(numericType) && typeMap[numericType] === undefined) {
+    // still allow raw numeric ids even if not in map keys as string
+    return numericType;
+  }
+
+  return null;
+}
+
+function getRandomAccent(index = 0) {
+  const starterPalettes = [
+    ['#7c3aed', '#5b21b6'],
+    ['#38bdf8', '#2563eb'],
+  ];
+
+  if (index < starterPalettes.length) {
+    const [start, end] = starterPalettes[index];
+    return `radial-gradient(120% 120% at 10% 12%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.32) 18%, rgba(255,255,255,0.06) 28%, transparent 42%), linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
+  }
+
+  const palettes = [
+    ['#8b5cf6', '#4c1d95'],
+    ['#38bdf8', '#0f5bd6'],
+    ['#14b8a6', '#0f766e'],
+    ['#f97316', '#b45309'],
+    ['#ef4444', '#7f1d1d'],
+    ['#22c55e', '#166534'],
+    ['#f59e0b', '#a16207'],
+    ['#e879f9', '#7e22ce'],
+  ];
+
+  const [start, end] = palettes[Math.floor(Math.random() * palettes.length)];
+  return `radial-gradient(120% 120% at 10% 12%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.32) 18%, rgba(255,255,255,0.06) 28%, transparent 42%), linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
+}
+
+export default async function ListingPage({ type }) {
+  const { typeLabels, typeMap, typeList } = await getTypeMaps();
+  const activeType = normalizeType(type, typeMap);
+
+  let items = [];
+
+  let query = supabase.from('lists').select('*').order('id', { ascending: true });
+
+  if (activeType) {
+    query = query.eq('Project_Type', activeType);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching data:', error);
+  }
+
+  if (data && data.length > 0) {
+  items = data.map((item, index) => ({
+    id: item.id,
+    type: item.Project_Type,
+    title: item.Project_Name ?? 'Untitled item',
+    category: typeLabels[item.Project_Type] ?? 'Project',
+    date: item.Begin_date
+      ? new Date(item.Begin_date).getFullYear().toString()
+      : '',
+    accent: getRandomAccent(index),
+    summary: truncateText(item.About_Project),
+    description: item.About_Project ?? 'No description available yet.',
+
+    // field mentah tambahan buat detail modal
+    beginDate: item.Begin_date ?? null,
+    endDate: item.End_Date ?? null,
+    participation: item.MyParticipation ?? null,
+    linkBukti: item.Link_bukti ?? null,
+  }));
+}
+
+  const tabs = [
+    { key: 'All', value: null },
+    ...typeList.map((t) => ({
+      key: t.Types,
+      value: t.Types.trim().toUpperCase().charAt(0),
+    })),
+  ];
+
+  const activeTitle = activeType ? typeLabels[activeType] : 'All Experience';
+
   return (
-    <div className="min-h-screen bg-[#FFFEF7] text-[#171717]">
-      <Header />
+    <div className="min-h-screen bg-[#f5f5f5] text-[#171717]">
+      <header className="absolute top-20 left-50 z-50 px-6 py-4 bg-[#f5f5f5] rounded-2xl">
+        <div className="text-xl font-light text-29">
+          <nav className="flex gap-70">
+            <a href="/" className="inline-flex items-center justify-center gap-1.5 ">Home <span className="w-2.5 h-2.5 rounded-full bg-current"></span> </a>
+            <a href="/projects" className="inline-flex items-center justify-center gap-1.5">Projects <span className="w-2.5 h-2.5 rounded-full bg-current"></span> </a>
+            <a href="/" className="inline-flex items-center justify-center gap-1.5">About Me <span className="w-2.5 h-2.5 rounded-full bg-current"></span></a>
+          </nav>
+        </div>
+      </header>
 
       <main className="mx-auto max-w-7xl px-6 pb-20 pt-36">
         <section className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -59,61 +150,13 @@ export default function ListingPage() {
               Portfolio catalog
             </p>
             <h1 className="text-5xl font-black tracking-[-0.06em] md:text-7xl">
-              Selected work
+              {activeTitle}
             </h1>
           </div>
-
-          <div className="flex flex-wrap gap-3">
-            {filters.map((filter, index) => (
-              <button
-                key={filter}
-                className={`rounded-full border px-4 py-2 text-sm transition ${
-                  index === 0
-                    ? 'border-[#171717] bg-[#171717] text-[#FFFEF7]'
-                    : 'border-[#171717]/20 bg-white text-[#171717] hover:border-[#171717]'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
+          <FilterBar tabs={tabs} selectedType={type} />
         </section>
 
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {projects.map((project, index) => (
-            <article
-              key={project.title}
-              className="group overflow-hidden rounded-4xl border border-[#171717]/10 bg-white shadow-[0_20px_60px_rgba(22,22,22,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_80px_rgba(22,22,22,0.12)]"
-            >
-              <div className={`relative h-56 overflow-hidden bg-linear-to-br ${project.accent}`}>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_42%)]" />
-                <div className="absolute right-6 top-6 rounded-full border border-white/60 bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-[#171717] backdrop-blur-sm">
-                  {project.category}
-                </div>
-                <div className="absolute -bottom-8 left-6 h-24 w-24 rounded-full bg-white/25 blur-2xl" />
-              </div>
-
-              <div className="p-6">
-                <div className="mb-4 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[#5B5B5B]">
-                  <span>{project.year}</span>
-                  <span>0{index + 1}</span>
-                </div>
-
-                <h2 className="mb-3 text-3xl font-bold tracking-tighter">{project.title}</h2>
-                <p className="text-base leading-7 text-[#3D3D3D]">{project.summary}</p>
-
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="text-sm font-medium uppercase tracking-[0.18em] text-[#171717]/70">
-                    View project
-                  </span>
-                  <span className="text-2xl leading-none text-[#171717] transition-transform duration-300 group-hover:translate-x-1">
-                    →
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </section>
+        <ProjectCardList items={items} />
       </main>
     </div>
   );
