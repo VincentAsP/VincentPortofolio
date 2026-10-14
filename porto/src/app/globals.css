@@ -1,113 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Bungee+Hairline&display=swap');
 @import "tailwindcss";
-/* @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Fira+Mono:wght@400;500;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Zen+Maru+Gothic&display=swap'); */
 
-:root {
-  --background: #F5F5F5;
-  --foreground: #171717;
+@font-face {
+  font-family: 'OCR-B 10 BT';
+  src: url('/fonts/ocr-b-10-bt.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
 }
 
-:root {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --font-sans: var(--font-bricolage), system-ui, sans-serif;
+  --font-serif: var(--font-serif), Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-bungee: 'Bungee Hairline', cursive, sans-serif;
+  --font-ocr: 'OCR-B 10 BT', 'OCR B 10 BT', monospace;
+  --color-accent: #3b82f6;
+
+  --animate-rise: rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-wipe: wipe 0.7s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+  --animate-fade: fade 0.4s ease both;
+  --animate-reel: reel 3s linear infinite;
+
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { transform: translateY(80px); opacity: 0; } }
+  @keyframes wipe { to { transform: scaleY(1); } }
+  @keyframes reel { to { transform: rotate(360deg); } }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.font-bungee {
+  font-family: 'Bungee Hairline', cursive, sans-serif;
 }
 
-html,
-body {
-  overflow-x: hidden;
-  overflow-y: auto;
+.font-ocr {
+  font-family: 'OCR-B 10 BT', 'OCR B 10 BT', monospace;
 }
 
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+html { 
+  scroll-behavior: smooth; 
+  background-color: #000000; 
+  color-scheme: dark;
 }
 
-@keyframes enterFromTop {
-  0% {
-    opacity: 0;
-    transform: translateY(-32px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+:focus-visible { 
+  outline: 2px solid var(--color-accent); 
+  outline-offset: 3px; 
 }
 
-@keyframes filterPanelIn {
-  0% {
-    opacity: 0;
-    transform: scaleX(0.2) translateY(-4px);
-  }
-  100% {
-    opacity: 1;
-    transform: scaleX(1) translateY(0);
-  }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-rise, .animate-reel { animation: none; }
 }
-
-.animate-marquee {
-  animation: marquee 15s linear infinite;
-}
-
-.enter-from-top {
-  animation: enterFromTop 0.8s ease-out both;
-}
-
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;             /* Chrome, Safari, Opera */
-}
-.glitch-letter {
-  display: inline-block;
-  position: relative;
-}
-
-.glitch-letter::before,
-.glitch-letter::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-}
-
-.glitch-letter:hover::before,
-.glitch-letter:hover::after {
-  opacity: 0.8;
-}
-
-.glitch-letter:hover::before {
-  color: #ff3b6b;
-  animation: glitch-before 350ms steps(2, end) infinite;
-}
-
-.glitch-letter:hover::after {
-  color: #00d9ff;
-  animation: glitch-after 300ms steps(2, end) infinite;
-}
-
-@keyframes glitch-before {
-  0%, 100% { clip-path: inset(0 0 75% 0); transform: translate(-2px, -1px); }
-  50% { clip-path: inset(45% 0 25% 0); transform: translate(2px, 1px); }
-}
-
-@keyframes glitch-after {
-  0%, 100% { clip-path: inset(70% 0 0 0); transform: translate(2px, 1px); }
-  50% { clip-path: inset(15% 0 55% 0); transform: translate(-2px, -1px); }
-}
-
